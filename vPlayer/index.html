@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Video Player</title>
+
+    <link type="text/css" rel="stylesheet" href="style.css"/>
+    <script src="player.js"></script>
+
+</head>
+<body>
+<div class="content">
+    <div class="movie_player">
+        <video class="main_video">
+            <source src="movie.ogv" type='video/ogg; codecs="theora, vorbis"'>
+            <source src="movie.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"'>
+            <source src="movie.webm" type='video/webm; codecs="vp8, vorbis"'>
+            Тег video не поддерживается вашим браузером.
+            <a href="movie.mp4">Скачайте видео</a>.
+        </video>
+        <div class="bottom">
+            <div class="progress_bar">
+                <div class="progress">
+                </div>
+            </div>
+            <div class="controls">
+                <div class="left_controls">
+                    <button class="togglePlay">
+                        Play
+                    </button>
+                    <button class="mute">
+                        mute
+                    </button>
+                    <div class="sound">
+                        <div class="volume">
+
+
+                        </div>
+                    </div>
+                    <button class="up_10">
+                        +10 sec
+                    </button>
+                    <button class="down_10">
+                        -10 sec
+                    </button>
+                    <div class="text_progress"></div>
+                </div>
+                <div class="right_controls">
+                    <button class="speed">
+                        1
+                    </button>
+                    <button class="fullscreen">
+                        [ ]
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
