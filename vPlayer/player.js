@@ -92,20 +92,11 @@ var Player = (function () {
             this.fullScreen = false;
         }
     };
-    Player.prototype.addDragListeners = function (mousemove, mouseup) {
-        document.addEventListener('mousemove', mousemove);
-        document.addEventListener('mouseup', mouseup);
-    };
-    Player.prototype.removeDragListeners = function () {
-        document.removeEventListener('mousemove');
-        document.removeEventListener('mouseup');
-    };
     return Player;
 }());
 var ProgressBarManager = (function () {
     function ProgressBarManager(player, video, bar, textProgress) {
         var _this = this;
-        this.player = player;
         this.video = video;
         this.progress = bar.querySelector(".progress");
         this.bar = bar;
@@ -113,26 +104,12 @@ var ProgressBarManager = (function () {
         setInterval(function () { return _this.doProgress(); }, 100);
         var isMouseDown = false;
         var isPaused;
-        var mousemove = function (event) {
-            var offset = document.querySelector(".movie_player").offsetLeft;
-            if (isMouseDown) {
-                var x = (event.pageX - offset) / bar.offsetWidth;
-                video.currentTime = x * video.duration;
-            }
-        };
-        var mouseup = function (event) {
-            isMouseDown = false;
-            if (!isPaused && !video.ended)
-                video.play();
-            player.removeDragListeners();
-        };
         this.bar.addEventListener("mousedown", function (event) {
             isPaused = video.paused;
             video.pause();
             var x = event.offsetX / bar.offsetWidth;
             video.currentTime = x * video.duration;
             isMouseDown = true;
-            player.addDragListeners(mousemove, mouseup);
         });
         this.bar.addEventListener("click", function (event) {
             isPaused = video.paused;
@@ -141,6 +118,20 @@ var ProgressBarManager = (function () {
             isMouseDown = false;
             if (!isPaused)
                 video.play();
+        });
+        document.addEventListener('mouseup', function (event) {
+            if (isMouseDown) {
+                isMouseDown = false;
+                if (!isPaused && !video.ended)
+                    video.play();
+            }
+        });
+        document.addEventListener('mousemove', function (event) {
+            if (isMouseDown) {
+                var offset = document.querySelector(".movie_player").offsetLeft;
+                var x = (event.pageX - offset) / bar.offsetWidth;
+                video.currentTime = x * video.duration;
+            }
         });
     }
     ProgressBarManager.prototype.doProgress = function () {
@@ -154,32 +145,25 @@ var ProgressBarManager = (function () {
     return ProgressBarManager;
 }());
 var VolumeManager = (function () {
-    function VolumeManager(player, video, soundView) {
-        var self = this;
-        this.player = player;
+    function VolumeManager(video, soundView) {
+        var _this = this;
         this.video = video;
         this.soundBar = soundView;
         this.volumeView = soundView.querySelector(".volume");
         this.changeVolume(video.volume);
         var isMouseDown = false;
-        var mousemove = function (event) {
-            var offset = document.querySelector(".movie_player").offsetLeft;
+        this.soundBar.addEventListener('mouseout', function () { return isMouseDown = false; });
+        this.soundBar.addEventListener('mouseup', function () { return isMouseDown = false; });
+        this.soundBar.addEventListener('mousedown', function () { return isMouseDown = true; });
+        this.soundBar.addEventListener('mousemove', function (event) {
             if (isMouseDown) {
-                var volume = (event.pageX - offset) / self.soundBar.offsetWidth;
-                self.changeVolume(volume);
+                var volume = event.offsetX / _this.soundBar.offsetWidth;
+                _this.changeVolume(volume);
             }
-        };
-        var mouseup = function (event) {
-            isMouseDown = false;
-            player.removeDragListeners();
-        };
-        this.soundBar.addEventListener('mousedown', function () {
-            isMouseDown = true;
-            player.addDragListeners(mousemove, mouseup);
         });
         this.soundBar.addEventListener('click', function (event) {
-            var volume = event.offsetX / self.soundBar.offsetWidth;
-            self.changeVolume(volume);
+            var volume = event.offsetX / _this.soundBar.offsetWidth;
+            _this.changeVolume(volume);
             isMouseDown = false;
         });
     }

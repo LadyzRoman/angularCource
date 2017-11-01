@@ -5,16 +5,14 @@
     <title>Video Player</title>
 
     <link type="text/css" rel="stylesheet" href="style.css"/>
-    <script src="player.js"></script>
-
 </head>
 <body>
 <div class="content">
     <div class="movie_player">
         <video class="main_video">
+            <source src="movie.mp4" type='video/mp4; codecs="avcl.42E01E, mp4a.40.2"'>
             <source src="movie.ogv" type='video/ogg; codecs="theora, vorbis"'>
             <source src="movie.webm" type='video/webm; codecs="vp8, vorbis"'>
-            <source src="movie.mp4" type='video/mp4; codecs="avc1.42E01E, mp4a.40.2"'>
             Тег video не поддерживается вашим браузером.
             <a href="movie.mp4">Скачайте видео</a>.
         </video>
@@ -57,6 +55,9 @@
         </div>
     </div>
 </div>
+
+
+<script src="player.js"></script>
 
 </body>
 </html>

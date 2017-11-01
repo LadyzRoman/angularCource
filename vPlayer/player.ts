@@ -126,18 +126,6 @@ class Player
             this.fullScreen = false;
         }
     }
-
-    addDragListeners(mousemove, mouseup)
-    {
-        document.addEventListener('mousemove', mousemove);
-        document.addEventListener('mouseup', mouseup);
-    }
-
-    removeDragListeners()
-    {
-        document.removeEventListener('mousemove');
-        document.removeEventListener('mouseup');
-    }
 }
 
 class ProgressBarManager
@@ -146,11 +134,9 @@ class ProgressBarManager
     private progress: HTMLElement;
     private bar: HTMLElement;
     private textProgress: HTMLElement;
-    private player : Player;
 
     constructor(player: Player, video: HTMLMediaElement, bar: HTMLElement, textProgress: HTMLElement)
     {
-        this.player = player;
         this.video = video;
         this.progress = <HTMLElement>bar.querySelector(".progress");
         this.bar = bar;
@@ -160,24 +146,6 @@ class ProgressBarManager
         let isMouseDown = false;
         let isPaused;
 
-        let mousemove = function (event)
-        {
-            let offset = (<HTMLElement>document.querySelector(".movie_player")).offsetLeft;
-
-            if (isMouseDown) {
-                let x = (event.pageX - offset) / bar.offsetWidth;
-                video.currentTime = x * video.duration;
-            }
-        };
-
-        let mouseup = function (event)
-        {
-            isMouseDown = false;
-            if (!isPaused && !video.ended)
-                video.play();
-            player.removeDragListeners();
-        };
-
         this.bar.addEventListener("mousedown", (event) =>
         {
             isPaused = video.paused;
@@ -185,10 +153,9 @@ class ProgressBarManager
             let x = event.offsetX / bar.offsetWidth;
             video.currentTime = x * video.duration;
             isMouseDown = true;
-            player.addDragListeners(mousemove, mouseup);
         });
 
-        this.bar.addEventListener("click", function(event)
+        this.bar.addEventListener("click", (event) =>
         {
             isPaused = video.paused;
             let x = event.offsetX / bar.offsetWidth;
@@ -197,6 +164,24 @@ class ProgressBarManager
 
             if (!isPaused)
                 video.play();
+        });
+        document.addEventListener('mouseup', (event) =>
+        {
+            if (isMouseDown) {
+                isMouseDown = false;
+                if (!isPaused && !video.ended)
+                    video.play();
+            }
+        });
+        document.addEventListener('mousemove', (event) =>
+        {
+            if (isMouseDown) {
+
+                let offset = (<HTMLElement>document.querySelector(".movie_player")).offsetLeft;
+
+                let x = (event.pageX - offset) / bar.offsetWidth;
+                video.currentTime = x * video.duration;
+            }
         });
     }
 
@@ -219,13 +204,9 @@ class VolumeManager
     private video: HTMLMediaElement;
     private soundBar: HTMLElement;
     private volumeView: HTMLElement;
-    private player: Player;
 
-
-    constructor(player: Player, video: HTMLMediaElement, soundView: HTMLElement)
+    constructor(video: HTMLMediaElement, soundView: HTMLElement)
     {
-        let self = this;
-        this.player = player;
         this.video = video;
         this.soundBar = soundView;
         this.volumeView = <HTMLElement>soundView.querySelector(".volume");
@@ -233,29 +214,22 @@ class VolumeManager
         this.changeVolume(video.volume);
 
         let isMouseDown = false;
-        let mousemove = function (event)
+        this.soundBar.addEventListener('mouseout', () => isMouseDown = false);
+        this.soundBar.addEventListener('mouseup', () => isMouseDown = false);
+        this.soundBar.addEventListener('mousedown', () => isMouseDown = true);
+        this.soundBar.addEventListener('mousemove', (event) =>
         {
-            let offset = (<HTMLElement>document.querySelector(".movie_player")).offsetLeft;
-
-            if (isMouseDown) {
-                let volume = (event.pageX - offset) / self.soundBar.offsetWidth;
-                self.changeVolume(volume);
-            }
-        };
-        let mouseup = function (event)
-        {
-            isMouseDown = false;
-            player.removeDragListeners();
-        };
-        this.soundBar.addEventListener('mousedown', () =>
-        {
-            isMouseDown = true;
-            player.addDragListeners(mousemove, mouseup);
+           if (isMouseDown)
+           {
+               let volume = event.offsetX / this.soundBar.offsetWidth;
+               this.changeVolume(volume);
+           }
         });
-        this.soundBar.addEventListener('click', function(event)
+
+        this.soundBar.addEventListener('click', (event) =>
         {
-            let volume = event.offsetX / self.soundBar.offsetWidth;
-            self.changeVolume(volume);
+            let volume = event.offsetX / this.soundBar.offsetWidth;
+            this.changeVolume(volume);
             isMouseDown = false;
         });
     }
