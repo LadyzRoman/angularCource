@@ -3,6 +3,7 @@ var Player = (function () {
         var _this = this;
         this.speed = Speed.COMMON;
         this.fullScreen = false;
+        this.isVideoPaused = true;
         this.video = content.querySelector("video");
         this.togglePlayButton = content.querySelector(".togglePlay");
         this.toggleSpeedButton = content.querySelector(".speed");
@@ -16,16 +17,19 @@ var Player = (function () {
         this.up10Button.addEventListener('click', function () { return _this.video.currentTime += 10; });
         this.down10Button.addEventListener('click', function () { return _this.video.currentTime -= 10; });
         this.fullScreenButton.addEventListener('click', function () { return _this.toggleFullScreen(); });
-        this.progressBar = new ProgressBarManager(this.video, content.querySelector(".progress_bar"), content.querySelector(".text_progress"));
+        this.progressBar = new ProgressBarManager(this, this.video, content.querySelector(".progress_bar"), content.querySelector(".text_progress"));
         this.volumeManager = new VolumeManager(this.video, content.querySelector(".sound"));
         this.video.addEventListener("ended", function () { return _this.togglePlayButton.innerText = "Play"; });
+        this.video.addEventListener("click", function () { return _this.togglePlay(); });
     }
     Player.prototype.togglePlay = function () {
-        if (this.video.paused) {
+        if (this.isVideoPaused) {
+            this.isVideoPaused = false;
             this.video.play();
             this.togglePlayButton.innerText = "Pause";
         }
         else {
+            this.isVideoPaused = true;
             this.video.pause();
             this.togglePlayButton.innerText = "Play";
         }
@@ -88,12 +92,20 @@ var Player = (function () {
             this.fullScreen = false;
         }
     };
+    Player.prototype.addDragListeners = function (mousemove, mouseup) {
+        document.addEventListener('mousemove', mousemove);
+        document.addEventListener('mouseup', mouseup);
+    };
+    Player.prototype.removeDragListeners = function () {
+        document.removeEventListener('mousemove');
+        document.removeEventListener('mouseup');
+    };
     return Player;
 }());
 var ProgressBarManager = (function () {
-    function ProgressBarManager(video, bar, textProgress) {
+    function ProgressBarManager(player, video, bar, textProgress) {
         var _this = this;
-        var self = this;
+        this.player = player;
         this.video = video;
         this.progress = bar.querySelector(".progress");
         this.bar = bar;
@@ -101,39 +113,31 @@ var ProgressBarManager = (function () {
         setInterval(function () { return _this.doProgress(); }, 100);
         var isMouseDown = false;
         var isPaused;
+        var mousemove = function (event) {
+            var offset = document.querySelector(".movie_player").offsetLeft;
+            if (isMouseDown) {
+                var x = (event.pageX - offset) / bar.offsetWidth;
+                video.currentTime = x * video.duration;
+            }
+        };
+        var mouseup = function (event) {
+            isMouseDown = false;
+            if (!isPaused && !video.ended)
+                video.play();
+            player.removeDragListeners();
+        };
         this.bar.addEventListener("mousedown", function (event) {
             isPaused = video.paused;
             video.pause();
             var x = event.offsetX / bar.offsetWidth;
             video.currentTime = x * video.duration;
             isMouseDown = true;
-        });
-        this.bar.addEventListener("mouseup", function () {
-            isMouseDown = false;
-            if (!isPaused)
-                video.play();
+            player.addDragListeners(mousemove, mouseup);
         });
         this.bar.addEventListener("click", function (event) {
             isPaused = video.paused;
             var x = event.offsetX / bar.offsetWidth;
             video.currentTime = x * video.duration;
-            isMouseDown = false;
-            if (!isPaused)
-                video.play();
-        });
-        this.bar.addEventListener("mousemove", function (event) {
-            if (isMouseDown) {
-                var x = event.offsetX / bar.offsetWidth;
-                video.currentTime = x * video.duration;
-            }
-        });
-        this.video.addEventListener("mousemove", function (event) {
-            if (isMouseDown) {
-                var x = event.offsetX / bar.offsetWidth;
-                video.currentTime = x * video.duration;
-            }
-        });
-        this.video.addEventListener("mouseup", function () {
             isMouseDown = false;
             if (!isPaused)
                 video.play();
@@ -150,20 +154,28 @@ var ProgressBarManager = (function () {
     return ProgressBarManager;
 }());
 var VolumeManager = (function () {
-    function VolumeManager(video, soundView) {
+    function VolumeManager(player, video, soundView) {
         var self = this;
+        this.player = player;
         this.video = video;
         this.soundBar = soundView;
         this.volumeView = soundView.querySelector(".volume");
         this.changeVolume(video.volume);
         var isMouseDown = false;
-        this.soundBar.addEventListener('mousedown', function () { return isMouseDown = true; });
-        this.soundBar.addEventListener('mouseup', function () { return isMouseDown = false; });
-        this.soundBar.addEventListener('mousemove', function (event) {
+        var mousemove = function (event) {
+            var offset = document.querySelector(".movie_player").offsetLeft;
             if (isMouseDown) {
-                var volume = event.offsetX / self.soundBar.offsetWidth;
+                var volume = (event.pageX - offset) / self.soundBar.offsetWidth;
                 self.changeVolume(volume);
             }
+        };
+        var mouseup = function (event) {
+            isMouseDown = false;
+            player.removeDragListeners();
+        };
+        this.soundBar.addEventListener('mousedown', function () {
+            isMouseDown = true;
+            player.addDragListeners(mousemove, mouseup);
         });
         this.soundBar.addEventListener('click', function (event) {
             var volume = event.offsetX / self.soundBar.offsetWidth;
@@ -172,6 +184,10 @@ var VolumeManager = (function () {
         });
     }
     VolumeManager.prototype.changeVolume = function (volume) {
+        if (volume > 1)
+            volume = 1;
+        else if (volume < 0)
+            volume = 0;
         this.video.volume = volume;
         this.volumeView.style.width = volume * 100 + "%";
     };
@@ -184,8 +200,8 @@ var Speed;
     Speed[Speed["DOUBLE"] = 2] = "DOUBLE";
 })(Speed || (Speed = {}));
 function timeFormat(time) {
-    var minutes = Math.round(time / 60);
-    var sec = Math.round(time % 60);
+    var minutes = Math.floor(time / 60);
+    var sec = Math.floor(time) % 60;
     return ("00" + minutes).slice(-2) + ":" + ("00" + sec).slice(-2);
 }
 window.onload = function () { return new Player(document.querySelector(".movie_player")); };
