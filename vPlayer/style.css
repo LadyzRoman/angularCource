@@ -71,38 +71,23 @@ button
     background: -o-linear-gradient(white, grey);
     background: -moz-linear-gradient(white, grey);
     background: linear-gradient(white, grey);
-    opacity:0.9;
+    opacity:0.8;
+    display: flex;
+    justify-content: space-between;
 }
 
-.right_controls
+.controls *
 {
-    float: right;
-    width: 30%;
-    height:100%;
-}
-
-.left_controls
-{
-    float: left;
-    height:100%;
-    width:70%;
-}
-
-.right_controls>*
-{
+    flex-grow: 1;
     display: block;
-    float: right;
-    height:100%;
-    width: 20%;
 }
 
-.left_controls>*
+
+.sound, .text_progress
 {
-    display: block;
-    float: left;
-    height:100%;
-    width: 8.8%;
+    flex-grow: 2;
 }
+
 
 .sound
 {
