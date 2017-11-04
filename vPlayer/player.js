@@ -2,7 +2,7 @@ var Player = (function () {
     function Player(content) {
         var _this = this;
         this.speed = Speed.COMMON;
-        this.fullScreen = false;
+        this._fullScreen = false;
         this.isVideoPaused = true;
         this.video = content.querySelector("video");
         this.togglePlayButton = content.querySelector(".togglePlay");
@@ -10,13 +10,13 @@ var Player = (function () {
         this.up10Button = content.querySelector(".up_10");
         this.down10Button = content.querySelector(".down_10");
         this.muteButton = content.querySelector(".mute");
-        this.fullScreenButton = content.querySelector(".fullscreen");
+        this._fullScreenButton = content.querySelector(".fullscreen");
         this.togglePlayButton.addEventListener('click', function () { return _this.togglePlay(); });
         this.toggleSpeedButton.addEventListener('click', function () { return _this.toggleSpeed(); });
         this.muteButton.addEventListener('click', function () { return _this.toggleMute(); });
         this.up10Button.addEventListener('click', function () { return _this.video.currentTime += 10; });
         this.down10Button.addEventListener('click', function () { return _this.video.currentTime -= 10; });
-        this.fullScreenButton.addEventListener('click', function () { return _this.toggleFullScreen(); });
+        this._fullScreenButton.addEventListener('click', function () { return _this.toggleFullScreen(); });
         this.progressBar = new ProgressBarManager(this, this.video, content.querySelector(".progress_bar"), content.querySelector(".text_progress"));
         this.volumeManager = new VolumeManager(this.video, content.querySelector(".sound"));
         this.video.addEventListener("ended", function () { return _this.togglePlayButton.innerText = "Play"; });
@@ -64,7 +64,7 @@ var Player = (function () {
         }
     };
     Player.prototype.toggleFullScreen = function () {
-        if (!this.fullScreen) {
+        if (!this._fullScreen) {
             if (this.video.requestFullscreen) {
                 this.video.requestFullscreen();
             }
@@ -74,7 +74,7 @@ var Player = (function () {
             else if (this.video.webkitRequestFullscreen) {
                 this.video.webkitRequestFullscreen();
             }
-            this.fullScreen = true;
+            this._fullScreen = true;
         }
         else {
             if (document.exitFullscreen) {
@@ -89,15 +89,23 @@ var Player = (function () {
             else if (document.msExitFullscreen) {
                 document.msExitFullscreen();
             }
-            this.fullScreen = false;
+            this._fullScreen = false;
         }
     };
+    Object.defineProperty(Player.prototype, "fullScreen", {
+        get: function () {
+            return this._fullScreen;
+        },
+        enumerable: true,
+        configurable: true
+    });
     return Player;
 }());
 var ProgressBarManager = (function () {
     function ProgressBarManager(player, video, bar, textProgress) {
         var _this = this;
         this.video = video;
+        this.player = player;
         this.progress = bar.querySelector(".progress");
         this.bar = bar;
         this.textProgress = textProgress;
@@ -128,7 +136,12 @@ var ProgressBarManager = (function () {
         });
         document.addEventListener('mousemove', function (event) {
             if (isMouseDown) {
-                var offset = document.querySelector(".movie_player").offsetLeft;
+                var offset = void 0;
+                //TODO after full screen offset = 2offset
+                if (player.fullScreen)
+                    offset = 0;
+                else
+                    offset = document.querySelector(".movie_player").offsetLeft;
                 var x = (event.pageX - offset) / bar.offsetWidth;
                 video.currentTime = x * video.duration;
             }
@@ -151,8 +164,9 @@ var VolumeManager = (function () {
         this.soundBar = soundView;
         this.volumeView = soundView.querySelector(".volume");
         this.changeVolume(video.volume);
+        //TODO do it like progress bar
         var isMouseDown = false;
-        this.soundBar.addEventListener('mouseout', function () { return isMouseDown = false; });
+        //this.soundBar.addEventListener('mouseout', () => isMouseDown = false);
         this.soundBar.addEventListener('mouseup', function () { return isMouseDown = false; });
         this.soundBar.addEventListener('mousedown', function () { return isMouseDown = true; });
         this.soundBar.addEventListener('mousemove', function (event) {

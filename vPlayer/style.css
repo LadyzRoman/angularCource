@@ -12,6 +12,7 @@ button
     border:0;
     background-color: #008CBA;
     border-left:1px solid deepskyblue;
+    width: 40px;
 }
 
 
@@ -76,16 +77,26 @@ button
     justify-content: space-between;
 }
 
-.controls *
+.left_controls
 {
-    flex-grow: 1;
-    display: block;
+    display: flex;
+    justify-content: flex-start;
+}
+
+.right_controls
+{
+    display: flex;
+    justify-content: flex-end;
+}
+
+.controls * {
+    height: 100%;
 }
 
 
 .sound, .text_progress
 {
-    flex-grow: 2;
+
 }
 
 

@@ -9,16 +9,16 @@ class Player
     private up10Button: HTMLButtonElement;
     private down10Button: HTMLButtonElement;
     private muteButton: HTMLButtonElement;
-    private fullScreenButton: HTMLButtonElement;
+    private _fullScreenButton: HTMLButtonElement;
 
     private speed : Speed;
-    private fullScreen: boolean;
+    private _fullScreen: boolean;
     private isVideoPaused: boolean;
 
     constructor(content: HTMLElement)
     {
         this.speed = Speed.COMMON;
-        this.fullScreen = false;
+        this._fullScreen = false;
         this.isVideoPaused = true;
 
         this.video = content.querySelector("video");
@@ -27,14 +27,14 @@ class Player
         this.up10Button = <HTMLButtonElement> content.querySelector(".up_10");
         this.down10Button = <HTMLButtonElement> content.querySelector(".down_10");
         this.muteButton = <HTMLButtonElement> content.querySelector(".mute");
-        this.fullScreenButton = <HTMLButtonElement> content.querySelector(".fullscreen");
+        this._fullScreenButton = <HTMLButtonElement> content.querySelector(".fullscreen");
 
         this.togglePlayButton.addEventListener('click', () => this.togglePlay());
         this.toggleSpeedButton.addEventListener('click', () => this.toggleSpeed());
         this.muteButton.addEventListener('click', () => this.toggleMute());
         this.up10Button.addEventListener('click', () => this.video.currentTime += 10);
         this.down10Button.addEventListener('click', () => this.video.currentTime -= 10);
-        this.fullScreenButton.addEventListener('click', () => this.toggleFullScreen());
+        this._fullScreenButton.addEventListener('click', () => this.toggleFullScreen());
 
         this.progressBar = new ProgressBarManager(this, this.video,
             <HTMLElement>content.querySelector(".progress_bar"),
@@ -100,7 +100,7 @@ class Player
 
     toggleFullScreen(): void
     {
-        if (!this.fullScreen) {
+        if (!this._fullScreen) {
             if (this.video.requestFullscreen) {
                 this.video.requestFullscreen();
             }
@@ -110,7 +110,7 @@ class Player
             else if (this.video.webkitRequestFullscreen) {
                 this.video.webkitRequestFullscreen();
             }
-            this.fullScreen = true;
+            this._fullScreen = true;
         }
         else
         {
@@ -123,8 +123,13 @@ class Player
             } else if (document.msExitFullscreen) {
                 document.msExitFullscreen();
             }
-            this.fullScreen = false;
+            this._fullScreen = false;
         }
+    }
+
+
+    get fullScreen(): boolean {
+        return this._fullScreen;
     }
 }
 
@@ -134,10 +139,12 @@ class ProgressBarManager
     private progress: HTMLElement;
     private bar: HTMLElement;
     private textProgress: HTMLElement;
+    private player: Player;
 
     constructor(player: Player, video: HTMLMediaElement, bar: HTMLElement, textProgress: HTMLElement)
     {
         this.video = video;
+        this.player = player;
         this.progress = <HTMLElement>bar.querySelector(".progress");
         this.bar = bar;
         this.textProgress = textProgress;
@@ -176,8 +183,12 @@ class ProgressBarManager
         document.addEventListener('mousemove', (event) =>
         {
             if (isMouseDown) {
-
-                let offset = (<HTMLElement>document.querySelector(".movie_player")).offsetLeft;
+                let offset: number;
+                //TODO after full screen offset = 2offset
+                if (player.fullScreen)
+                    offset = 0;
+                else
+                    offset = (<HTMLElement>document.querySelector(".movie_player")).offsetLeft;
 
                 let x = (event.pageX - offset) / bar.offsetWidth;
                 video.currentTime = x * video.duration;
@@ -213,8 +224,9 @@ class VolumeManager
 
         this.changeVolume(video.volume);
 
+        //TODO do it like progress bar
         let isMouseDown = false;
-        this.soundBar.addEventListener('mouseout', () => isMouseDown = false);
+        //this.soundBar.addEventListener('mouseout', () => isMouseDown = false);
         this.soundBar.addEventListener('mouseup', () => isMouseDown = false);
         this.soundBar.addEventListener('mousedown', () => isMouseDown = true);
         this.soundBar.addEventListener('mousemove', (event) =>
